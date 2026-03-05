@@ -1,31 +1,43 @@
-import { useAuth } from "@/_core/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { getLoginUrl } from "@/const";
-import { Streamdown } from 'streamdown';
+import Header from "@/components/Header";
+import HeroBanner from "@/components/HeroBanner";
+import QuickNavCards from "@/components/QuickNavCards";
+import Footer from "@/components/Footer";
+import NewsSection from "@/components/NewsSection";
+import PartnershipsSection from "@/components/PartnershipsSection";
+import TransparencySection from "@/components/TransparencySection";
+import MembershipCTA from "@/components/MembershipCTA";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Workflow, Frontend Best Practices, Design Guide and Common Pitfalls
- */
 export default function Home() {
-  // The userAuth hooks provides authentication state
-  // To implement login/logout functionality, simply call logout() or redirect to getLoginUrl()
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
-
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
-
   return (
     <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
+      <Header />
+      
+      {/* Add top padding to account for fixed header */}
+      <main className="flex-grow pt-16 md:pt-20">
+        <section id="home">
+          <HeroBanner />
+        </section>
+
+        <QuickNavCards />
+
+        <section id="news">
+          <NewsSection />
+        </section>
+
+        <section id="partnerships">
+          <PartnershipsSection />
+        </section>
+
+        <section id="transparency">
+          <TransparencySection />
+        </section>
+
+        <section id="membership">
+          <MembershipCTA />
+        </section>
       </main>
+
+      <Footer />
     </div>
   );
 }
