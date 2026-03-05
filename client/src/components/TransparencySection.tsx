@@ -72,14 +72,14 @@ export default function TransparencySection() {
                   </div>
                 </div>
                 
-                  href={doc.fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full mt-4 py-2 px-4 bg-primary hover:bg-primary-dark text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Baixar
-                </a>
+                href={doc.fileUrl}
+  target="_blank"
+  rel="noopener noreferrer"
+  style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"8px",marginTop:"16px",padding:"8px 16px",background:"#0B5D3B",color:"white",borderRadius:"8px",fontWeight:"600",textDecoration:"none"}}
+>
+  <Download className="w-4 h-4" />
+  Baixar
+</a>
               </Card>
             ))
           ) : (
