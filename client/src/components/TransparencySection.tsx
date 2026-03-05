@@ -1,75 +1,34 @@
 import { Card } from "@/components/ui/card";
 import { Download, FileText, BarChart3, BookOpen } from "lucide-react";
 import { useState } from "react";
-
-// Mock data - will be replaced with real data from API
-const mockDocuments = {
-  accounts: [
-    {
-      id: 1,
-      title: "Prestação de Contas 2025",
-      year: 2025,
-      url: "#",
-    },
-    {
-      id: 2,
-      title: "Prestação de Contas 2024",
-      year: 2024,
-      url: "#",
-    },
-  ],
-  reports: [
-    {
-      id: 3,
-      title: "Relatório Financeiro 2025",
-      year: 2025,
-      url: "#",
-    },
-    {
-      id: 4,
-      title: "Relatório Financeiro 2024",
-      year: 2024,
-      url: "#",
-    },
-  ],
-  documents: [
-    {
-      id: 5,
-      title: "Estatuto Social",
-      url: "#",
-    },
-    {
-      id: 6,
-      title: "Atas de Assembleia 2025",
-      url: "#",
-    },
-  ],
-};
+import { trpc } from "@/lib/trpc";
 
 const categories = [
-  {
-    id: "accounts",
-    title: "Prestação de Contas",
-    icon: FileText,
-  },
-  {
-    id: "reports",
-    title: "Relatórios Financeiros",
-    icon: BarChart3,
-  },
-  {
-    id: "documents",
-    title: "Estatuto e Atas",
-    icon: BookOpen,
-  },
+  { id: "Prestação de Contas", title: "Prestação de Contas", icon: FileText },
+  { id: "Relatórios Financeiros", title: "Relatórios Financeiros", icon: BarChart3 },
+  { id: "Estatuto e Atas", title: "Estatuto e Atas", icon: BookOpen },
 ];
 
 export default function TransparencySection() {
-  const [activeCategory, setActiveCategory] = useState("accounts");
+  const [activeCategory, setActiveCategory] = useState("Prestação de Contas");
+  const { data: allDocuments, isLoading } = trpc.transparencyDocuments.list.useQuery();
 
-  const getDocuments = () => {
-    return mockDocuments[activeCategory as keyof typeof mockDocuments] || [];
-  };
+  const filteredDocs = allDocuments?.filter(doc => doc.category === activeCategory) ?? [];
+
+  if (isLoading) {
+    return (
+      <section className="py-16 md:py-24 bg-gray-bg">
+        <div className="container">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-gray-200 rounded w-64" />
+            <div className="grid grid-cols-3 gap-4">
+              {[1,2,3].map(i => <div key={i} className="h-16 bg-gray-200 rounded" />)}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16 md:py-24 bg-gray-bg">
@@ -78,7 +37,6 @@ export default function TransparencySection() {
           Documentos de Transparência
         </h2>
 
-        {/* Category Tabs */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
           {categories.map((category) => {
             const Icon = category.icon;
@@ -99,33 +57,29 @@ export default function TransparencySection() {
           })}
         </div>
 
-        {/* Documents Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {getDocuments().length > 0 ? (
-            getDocuments().map((doc) => (
-              <Card
-                key={doc.id}
-                className="p-6 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer bg-white rounded-lg"
-              >
+          {filteredDocs.length > 0 ? (
+            filteredDocs.map((doc) => (
+              <Card key={doc.id} className="p-6 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer bg-white rounded-lg">
                 <div className="flex items-start gap-4 mb-4">
                   <div className="w-12 h-12 bg-primary-light rounded-lg flex items-center justify-center flex-shrink-0">
                     <FileText className="w-6 h-6 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-bold text-text-primary text-lg">
-                      {doc.title}
-                    </h4>
-                    {"year" in doc && (
-                      <p className="text-sm text-text-secondary mt-1">
-                        {doc.year}
-                      </p>
-                    )}
+                    <h4 className="font-bold text-text-primary text-lg">{doc.title}</h4>
+                    {doc.year && <p className="text-sm text-text-secondary mt-1">{doc.year}</p>}
+                    {doc.description && <p className="text-sm text-text-secondary mt-1">{doc.description}</p>}
                   </div>
                 </div>
-                <button className="w-full mt-4 py-2 px-4 bg-primary hover:bg-primary-dark text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2">
+                
+                  href={doc.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full mt-4 py-2 px-4 bg-primary hover:bg-primary-dark text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+                >
                   <Download className="w-4 h-4" />
                   Baixar
-                </button>
+                </a>
               </Card>
             ))
           ) : (
