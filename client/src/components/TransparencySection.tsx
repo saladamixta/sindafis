@@ -12,8 +12,7 @@ const categories = [
 export default function TransparencySection() {
   const [activeCategory, setActiveCategory] = useState("Prestação de Contas");
   const { data: allDocuments, isLoading } = trpc.transparencyDocuments.list.useQuery();
-
-  const filteredDocs = allDocuments?.filter(doc => doc.category === activeCategory) ?? [];
+  const filteredDocs = allDocuments?.filter((doc) => doc.category === activeCategory) ?? [];
 
   if (isLoading) {
     return (
@@ -22,7 +21,9 @@ export default function TransparencySection() {
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-gray-200 rounded w-64" />
             <div className="grid grid-cols-3 gap-4">
-              {[1,2,3].map(i => <div key={i} className="h-16 bg-gray-200 rounded" />)}
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-16 bg-gray-200 rounded" />
+              ))}
             </div>
           </div>
         </div>
@@ -60,7 +61,7 @@ export default function TransparencySection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {filteredDocs.length > 0 ? (
             filteredDocs.map((doc) => (
-              <Card key={doc.id} className="p-6 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer bg-white rounded-lg">
+              <Card key={doc.id} className="p-6 border-0 shadow-md hover:shadow-lg transition-all bg-white rounded-lg">
                 <div className="flex items-start gap-4 mb-4">
                   <div className="w-12 h-12 bg-primary-light rounded-lg flex items-center justify-center flex-shrink-0">
                     <FileText className="w-6 h-6 text-primary" />
@@ -71,15 +72,14 @@ export default function TransparencySection() {
                     {doc.description && <p className="text-sm text-text-secondary mt-1">{doc.description}</p>}
                   </div>
                 </div>
-                
-                href={doc.fileUrl}
-  target="_blank"
-  rel="noopener noreferrer"
-  style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"8px",marginTop:"16px",padding:"8px 16px",background:"#0B5D3B",color:"white",borderRadius:"8px",fontWeight:"600",textDecoration:"none"}}
->
-  <Download className="w-4 h-4" />
-  Baixar
-</a>
+                <div className="mt-4">
+                  <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
+                    <button className="w-full py-2 px-4 bg-primary hover:bg-primary-dark text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2">
+                      <Download className="w-4 h-4" />
+                      Baixar
+                    </button>
+                  </a>
+                </div>
               </Card>
             ))
           ) : (
