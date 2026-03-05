@@ -1,6 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 
+// Usando uma imagem de skyline urbano como placeholder
+const HERO_IMAGE = "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=1200&h=600&fit=crop";
+
 export default function HeroBanner() {
   const handleScroll = (id: string) => {
     const element = document.getElementById(id);
@@ -10,20 +13,24 @@ export default function HeroBanner() {
   };
 
   return (
-    <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 bg-gradient-to-b from-primary-light to-white overflow-hidden">
-      {/* Decorative elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-primary opacity-5 rounded-full -mr-48 -mt-48"></div>
-      <div className="absolute bottom-0 left-0 w-72 h-72 bg-primary opacity-5 rounded-full -ml-36 -mb-36"></div>
+    <section 
+      className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: `url('${HERO_IMAGE}')`,
+      }}
+    >
+      {/* Overlay escuro para melhor legibilidade */}
+      <div className="absolute inset-0 bg-black/40"></div>
 
       <div className="container relative z-10">
         <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary mb-6">
-            SINDAFIS
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+            SINDAFIS – Sindicato dos
           </h1>
-          <h2 className="text-xl md:text-2xl text-text-secondary mb-8 font-medium">
-            Sindicato dos Auditores Fiscais de Campo Grande
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-8">
+            Auditores Fiscais de Campo Grande
           </h2>
-          <p className="text-lg text-text-secondary mb-12 leading-relaxed">
+          <p className="text-lg md:text-xl text-white/90 mb-12 leading-relaxed font-medium">
             Representando e fortalecendo os auditores fiscais do município
           </p>
 
@@ -38,8 +45,7 @@ export default function HeroBanner() {
             </Button>
             <Button
               size="lg"
-              variant="outline"
-              className="border-2 border-primary text-primary hover:bg-primary-light font-semibold text-lg px-8 py-6 rounded-lg transition-all"
+              className="bg-white/20 hover:bg-white/30 text-white border-2 border-white font-semibold text-lg px-8 py-6 rounded-lg transition-all"
               onClick={() => handleScroll("news")}
             >
               Ver Notícias
@@ -48,7 +54,7 @@ export default function HeroBanner() {
 
           {/* Scroll indicator */}
           <div className="flex justify-center animate-bounce">
-            <ChevronDown className="w-8 h-8 text-primary" />
+            <ChevronDown className="w-8 h-8 text-white" />
           </div>
         </div>
       </div>

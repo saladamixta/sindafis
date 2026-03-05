@@ -1,38 +1,42 @@
 import { Card } from "@/components/ui/card";
-import { FileText, Users, Lock, Newspaper } from "lucide-react";
+import { Handshake, Users, FileText, Megaphone, ChevronRight } from "lucide-react";
 
 const quickNavItems = [
   {
     id: "membership",
     title: "Filie-se",
-    description: "Solicite sua filiação ao sindicato",
+    description: "Solicite sua filiação ao sindicato e acesse todos os benefícios",
     icon: Users,
-    color: "bg-blue-50",
-    iconColor: "text-blue-600",
+    color: "bg-green-50",
+    iconColor: "text-primary",
+    borderColor: "border-l-4 border-primary",
   },
   {
     id: "partnerships",
     title: "Convênios",
-    description: "Conheça nossos convênios exclusivos",
-    icon: FileText,
+    description: "Conheça nossos convênios exclusivos e descontos especiais",
+    icon: Handshake,
     color: "bg-green-50",
-    iconColor: "text-green-600",
+    iconColor: "text-primary",
+    borderColor: "border-l-4 border-primary",
   },
   {
     id: "transparency",
     title: "Transparência",
-    description: "Acesse relatórios e documentos",
-    icon: Lock,
-    color: "bg-purple-50",
-    iconColor: "text-purple-600",
+    description: "Acesse relatórios financeiros e documentos públicos",
+    icon: FileText,
+    color: "bg-green-50",
+    iconColor: "text-primary",
+    borderColor: "border-l-4 border-primary",
   },
   {
     id: "news",
     title: "Comunicados",
-    description: "Últimas notícias e comunicados",
-    icon: Newspaper,
-    color: "bg-orange-50",
-    iconColor: "text-orange-600",
+    description: "Acompanhe as últimas notícias e comunicados importantes",
+    icon: Megaphone,
+    color: "bg-green-50",
+    iconColor: "text-primary",
+    borderColor: "border-l-4 border-primary",
   },
 ];
 
@@ -45,28 +49,27 @@ export default function QuickNavCards() {
   };
 
   return (
-    <section className="py-16 md:py-24 bg-gray-bg">
+    <section className="py-16 md:py-24 bg-white">
       <div className="container">
-        <h2 className="text-3xl md:text-4xl font-bold text-text-primary text-center mb-12">
-          Navegação Rápida
-        </h2>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {quickNavItems.map((item) => {
             const Icon = item.icon;
             return (
               <Card
                 key={item.id}
-                className={`p-6 cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1 ${item.color} border-0`}
+                className={`p-6 cursor-pointer transition-all hover:shadow-xl hover:-translate-y-2 ${item.color} ${item.borderColor} border-0 rounded-lg`}
                 onClick={() => handleCardClick(item.id)}
               >
-                <div className={`w-12 h-12 rounded-lg ${item.color} flex items-center justify-center mb-4`}>
-                  <Icon className={`w-6 h-6 ${item.iconColor}`} />
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-14 h-14 rounded-lg bg-white flex items-center justify-center">
+                    <Icon className={`w-7 h-7 ${item.iconColor}`} />
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-text-secondary" />
                 </div>
                 <h3 className="text-lg font-bold text-text-primary mb-2">
                   {item.title}
                 </h3>
-                <p className="text-sm text-text-secondary">
+                <p className="text-sm text-text-secondary leading-relaxed">
                   {item.description}
                 </p>
               </Card>

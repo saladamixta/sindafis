@@ -46,3 +46,14 @@
 - [ ] Página "Parceiros"
 - [ ] Página "Transparência"
 - [ ] Página "Contato"
+
+
+## Ajustes de Design (Mockup)
+- [x] Receber e integrar logo arrumada
+- [x] Adicionar imagem de fundo no hero banner (skyline Campo Grande)
+- [x] Reorganizar cards de navegação com ícones mais destacados
+- [x] Melhorar layout de convênios e parceiros com logos
+- [x] Refinar chamada "Seja parte do SINDAFIS"
+- [x] Ajustar seção de documentos de transparência
+- [ ] Adicionar barra de busca no header
+- [x] Refinar espaçamentos e tipografia conforme mockup

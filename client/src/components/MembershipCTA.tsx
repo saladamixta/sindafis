@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Users, CheckCircle } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 import { useState } from "react";
 import MembershipForm from "./MembershipForm";
 
@@ -22,64 +22,58 @@ export default function MembershipCTA() {
       <div className="absolute bottom-0 left-0 w-72 h-72 bg-white opacity-5 rounded-full -ml-36 -mb-36"></div>
 
       <div className="container relative z-10">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-start gap-4 mb-8">
-            <Users className="w-12 h-12 flex-shrink-0" />
-            <div>
-              <h2 className="text-4xl md:text-5xl font-bold mb-4">
-                Filie-se ao SINDAFIS
-              </h2>
-              <p className="text-xl text-white/90">
-                Junte-se a centenas de auditores fiscais que confiam em nossa representação
-              </p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          {/* Left side - Content */}
+          <div>
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Seja parte do SINDAFIS
+            </h2>
+            <p className="text-xl text-white/90 mb-8">
+              Junte-se a centenas de auditores fiscais que confiam em nossa representação e fortaleça sua carreira.
+            </p>
+
+            {/* Benefits Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+              {benefits.map((benefit, index) => (
+                <div key={index} className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 flex-shrink-0 mt-1 text-white" />
+                  <span className="text-base">{benefit}</span>
+                </div>
+              ))}
             </div>
-          </div>
 
-          {/* Benefits Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-            {benefits.map((benefit, index) => (
-              <div key={index} className="flex items-start gap-3">
-                <CheckCircle className="w-6 h-6 flex-shrink-0 mt-1" />
-                <span className="text-lg">{benefit}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* CTA Buttons or Form */}
-          {!showForm ? (
-            <div className="flex flex-col sm:flex-row gap-4">
+            {/* CTA Button */}
+            {!showForm && (
               <Button
                 size="lg"
                 className="bg-white text-primary hover:bg-gray-100 font-semibold text-lg px-8 py-6 rounded-lg transition-all"
                 onClick={() => setShowForm(true)}
               >
-                Solicitar Filiação
+                Filie-se agora
               </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-2 border-white text-white hover:bg-white/10 font-semibold text-lg px-8 py-6 rounded-lg transition-all"
-              >
-                Saiba Mais
-              </Button>
-            </div>
-          ) : (
-            <div className="max-w-md mx-auto bg-white rounded-lg p-6">
+            )}
+          </div>
+
+          {/* Right side - Form */}
+          {showForm && (
+            <div className="bg-white rounded-lg p-8 shadow-2xl">
               <MembershipForm />
               <button
                 onClick={() => setShowForm(false)}
-                className="mt-4 w-full text-center text-gray-600 hover:text-gray-800 text-sm"
+                className="mt-4 w-full text-center text-gray-600 hover:text-gray-800 text-sm font-medium"
               >
                 Voltar
               </button>
             </div>
           )}
-
-          {/* Additional Info */}
-          <p className="mt-8 text-white/80 text-sm">
-            Dúvidas? Entre em contato conosco pelo email contato@sindafis.org.br ou telefone (67) 3333-4444
-          </p>
         </div>
+
+        {/* Additional Info */}
+        {!showForm && (
+          <p className="mt-12 text-white/80 text-sm text-center">
+            Dúvidas? Entre em contato conosco pelo email <strong>contato@sindafis.org.br</strong> ou telefone <strong>(67) 3333-4444</strong>
+          </p>
+        )}
       </div>
     </section>
   );

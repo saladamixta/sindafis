@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663206559842/i3TzkeMe6jQM3myXMV2Pah/logo_sindafis_f42930f5.png";
+const LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663206559842/i3TzkeMe6jQM3myXMV2Pah/logo_sindafis_6a469ff2.png";
 
 const menuItems = [
   { label: "Início", href: "#home" },
