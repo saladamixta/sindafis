@@ -24,16 +24,15 @@ export const appRouter = router({
   // News procedures
   news: router({
     list: publicProcedure.query(async () => {
-      const db = await getDb();
-      if (!db) return [];
-      const result = await db
-        .select()
-        .from(news)
-        .where(eq(news.published, new Date()))
-        .orderBy(desc(news.published))
-        .limit(10);
-      return result;
-    }),
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db
+    .select()
+    .from(news)
+    .orderBy(desc(news.createdAt))
+    .limit(10);
+  return result;
+}),
 
     getLatest: publicProcedure.query(async () => {
       const db = await getDb();
