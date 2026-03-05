@@ -16,7 +16,7 @@ export default function Admin() {
 
   useEffect(() => {
     if (!loading && (!user || user.role !== "admin")) {
-      setLocation("/");
+      window.location.href = "/admin/login";
     }
   }, [user, loading, setLocation]);
 
