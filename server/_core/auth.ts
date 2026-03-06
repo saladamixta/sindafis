@@ -4,7 +4,8 @@ import type { Request, Response } from "express";
 import { getSessionCookieOptions } from "./cookies";
 import { getDb } from "../db";
 import { users } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME ?? "admin";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "sindafis2025";
@@ -65,8 +66,8 @@ export function registerAuthRoutes(app: import("express").Express) {
     ${_req.query.error ? '<div class="error">Usuário ou senha incorretos.</div>' : ''}
     <form method="POST" action="/api/auth/login">
       <div class="field">
-        <label>Usuário</label>
-        <input type="text" name="username" placeholder="Digite seu usuário" required autofocus />
+        <label>E-mail (admin) ou usuário</label>
+        <input type="text" name="username" placeholder="admin@dominio.com.br" required autofocus />
       </div>
       <div class="field">
         <label>Senha</label>
@@ -79,29 +80,52 @@ export function registerAuthRoutes(app: import("express").Express) {
 </html>`);
   });
 
-  // Login POST
+  // Login POST (supports multi-admin users stored in DB + legacy env admin)
   app.post("/api/auth/login", async (req: Request, res: Response) => {
     const { username, password } = req.body;
-
-    if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
-      res.redirect("/admin/login?error=1");
-      return;
-    }
-
     try {
       const db = await getDb();
-      if (db) {
-        // Upsert admin user
-        const existing = await db.select().from(users).where(eq(users.openId, "admin-local")).limit(1);
-        if (existing.length === 0) {
-          await db.insert(users).values({
-            openId: "admin-local",
-            name: "Administrador",
-            email: null,
-            loginMethod: "password",
-            role: "admin",
-          });
+      if (!db) throw new Error("Database not available");
+
+      // 1) Try DB auth (email/username + passwordHash)
+      if (typeof username === "string" && typeof password === "string") {
+        const candidate = await db
+          .select()
+          .from(users)
+          .where(and(eq(users.email, username), eq(users.role, "admin")))
+          .limit(1);
+
+        const u = candidate[0];
+        if (u && u.isActive === 1 && u.passwordHash) {
+          const ok = await bcrypt.compare(password, u.passwordHash);
+          if (ok) {
+            await db.update(users).set({ lastSignedIn: new Date() }).where(eq(users.id, u.id));
+            const token = await createSessionToken(u.openId, u.name ?? "Administrador");
+            const cookieOptions = getSessionCookieOptions(req);
+            res.cookie(COOKIE_NAME, token, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+            res.redirect("/admin");
+            return;
+          }
         }
+      }
+
+      // 2) Legacy env admin fallback (keeps you from getting locked out)
+      if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+        res.redirect("/admin/login?error=1");
+        return;
+      }
+
+      // Ensure legacy admin user exists
+      const existing = await db.select().from(users).where(eq(users.openId, "admin-local")).limit(1);
+      if (existing.length === 0) {
+        await db.insert(users).values({
+          openId: "admin-local",
+          name: "Administrador",
+          email: null,
+          loginMethod: "password",
+          role: "admin",
+          isActive: 1,
+        });
       }
 
       const token = await createSessionToken("admin-local", "Administrador");
