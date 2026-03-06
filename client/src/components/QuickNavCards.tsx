@@ -7,36 +7,24 @@ const quickNavItems = [
     title: "Filie-se",
     description: "Solicite sua filiação ao sindicato e acesse todos os benefícios",
     icon: Users,
-    color: "bg-green-50",
-    iconColor: "text-primary",
-    borderColor: "border-l-4 border-primary",
   },
   {
     id: "partnerships",
     title: "Convênios",
     description: "Conheça nossos convênios exclusivos e descontos especiais",
     icon: Handshake,
-    color: "bg-green-50",
-    iconColor: "text-primary",
-    borderColor: "border-l-4 border-primary",
   },
   {
     id: "transparency",
     title: "Transparência",
     description: "Acesse relatórios financeiros e documentos públicos",
     icon: FileText,
-    color: "bg-green-50",
-    iconColor: "text-primary",
-    borderColor: "border-l-4 border-primary",
   },
   {
     id: "news",
     title: "Comunicados",
     description: "Acompanhe as últimas notícias e comunicados importantes",
     icon: Megaphone,
-    color: "bg-green-50",
-    iconColor: "text-primary",
-    borderColor: "border-l-4 border-primary",
   },
 ];
 
@@ -57,18 +45,30 @@ export default function QuickNavCards() {
             return (
               <Card
                 key={item.id}
-                className={`p-6 cursor-pointer transition-all hover:shadow-xl hover:-translate-y-2 ${item.color} ${item.borderColor} border-0 rounded-lg`}
+                className={[
+                  "group relative p-6 cursor-pointer transition-all",
+                  "bg-white border border-border shadow-sm",
+                  "hover:shadow-xl hover:-translate-y-2 hover:border-primary/40",
+                  "rounded-xl overflow-hidden",
+                ].join(" ")}
                 onClick={() => handleCardClick(item.id)}
               >
+                {/* filete verde no topo */}
+                <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
+
                 <div className="flex items-start justify-between mb-4">
-                  <div className="w-14 h-14 rounded-lg bg-white flex items-center justify-center">
-                    <Icon className={`w-7 h-7 ${item.iconColor}`} />
+                  {/* ícone maior, verde, com badge */}
+                  <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Icon className="w-8 h-8 text-primary" />
                   </div>
-                  <ChevronRight className="w-5 h-5 text-text-secondary" />
+
+                  <ChevronRight className="w-5 h-5 text-primary/50 group-hover:text-primary transition-colors" />
                 </div>
+
                 <h3 className="text-lg font-bold text-text-primary mb-2">
                   {item.title}
                 </h3>
+
                 <p className="text-sm text-text-secondary leading-relaxed">
                   {item.description}
                 </p>
