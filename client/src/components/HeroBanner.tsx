@@ -1,10 +1,23 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 
-// Usando uma imagem de skyline urbano como placeholder
-const HERO_IMAGE = "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=1200&h=600&fit=crop";
+const HERO_IMAGES = [
+  "/hero/hero_cg_1.webp",
+  "/hero/hero_cg_2.webp",
+  "/hero/hero_cg_3.webp",
+];
 
 export default function HeroBanner() {
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setActive((i) => (i + 1) % HERO_IMAGES.length);
+    }, 6000); // troca a cada 6s
+    return () => clearInterval(t);
+  }, []);
+
   const handleScroll = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
@@ -13,14 +26,25 @@ export default function HeroBanner() {
   };
 
   return (
-    <section 
-      className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden bg-cover bg-center bg-no-repeat"
-      style={{
-        backgroundImage: `url('${HERO_IMAGE}')`,
-      }}
-    >
-      {/* Overlay escuro para melhor legibilidade */}
-      <div className="absolute inset-0 bg-black/40"></div>
+    <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden bg-black">
+      {/* Slider de imagens */}
+      <div className="absolute inset-0">
+        {HERO_IMAGES.map((src, i) => (
+          <img
+            key={src}
+            src={src}
+            alt=""
+            className={[
+              "absolute inset-0 w-full h-full object-cover",
+              "transition-opacity duration-1000 ease-in-out",
+              i === active ? "opacity-100" : "opacity-0",
+            ].join(" ")}
+          />
+        ))}
+
+        {/* Overlay escuro para melhor legibilidade */}
+        <div className="absolute inset-0 bg-black/45" />
+      </div>
 
       <div className="container relative z-10">
         <div className="max-w-3xl mx-auto text-center">
