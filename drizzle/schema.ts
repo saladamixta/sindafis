@@ -14,8 +14,12 @@ export const users = mysqlTable("users", {
   /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
-  email: varchar("email", { length: 320 }),
+  email: varchar("email", { length: 320 }).unique(),
   loginMethod: varchar("loginMethod", { length: 64 }),
+  /** Password hash for local (multi-admin) auth. Only present for users created via the admin panel. */
+  passwordHash: varchar("passwordHash", { length: 255 }),
+  /** 1 = active, 0 = disabled (soft delete). */
+  isActive: int("isActive").default(1).notNull(),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
