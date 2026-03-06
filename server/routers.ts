@@ -1,12 +1,14 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { adminProcedure, publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { getDb } from "./db";
-import { news, partnerships, transparencyDocuments, memberships } from "../drizzle/schema";
+import { news, partnerships, transparencyDocuments, memberships, users } from "../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import bcrypt from "bcryptjs";
+import { nanoid } from "nanoid";
 
 export const appRouter = router({
   system: systemRouter,
@@ -21,18 +23,139 @@ export const appRouter = router({
     }),
   }),
 
+  // Users (multi-admin)
+  users: router({
+    list: adminProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return [];
+      const result = await db
+        .select({
+          id: users.id,
+          openId: users.openId,
+          name: users.name,
+          email: users.email,
+          role: users.role,
+          isActive: users.isActive,
+          loginMethod: users.loginMethod,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
+          lastSignedIn: users.lastSignedIn,
+        })
+        .from(users)
+        .orderBy(desc(users.createdAt));
+      return result;
+    }),
+
+    create: adminProcedure
+      .input(
+        z.object({
+          name: z.string().min(1),
+          email: z.string().email(),
+          password: z.string().min(8),
+          role: z.enum(["admin", "user"]).default("admin"),
+          isActive: z.boolean().default(true),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+        const existing = await db
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.email, input.email))
+          .limit(1);
+        if (existing.length) {
+          throw new TRPCError({ code: "CONFLICT", message: "Já existe um usuário com esse e-mail." });
+        }
+
+        const passwordHash = await bcrypt.hash(input.password, 10);
+        const openId = `local-${nanoid(24)}`;
+
+        await db.insert(users).values({
+          openId,
+          name: input.name,
+          email: input.email,
+          loginMethod: "password",
+          passwordHash,
+          role: input.role,
+          isActive: input.isActive ? 1 : 0,
+          lastSignedIn: new Date(),
+        });
+
+        return { success: true } as const;
+      }),
+
+    update: adminProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          name: z.string().min(1).optional(),
+          email: z.string().email().optional(),
+          password: z.string().min(8).optional(),
+          role: z.enum(["admin", "user"]).optional(),
+          isActive: z.boolean().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+        // Prevent admin from disabling themselves
+        if (input.isActive === false && ctx.user?.id === input.id) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Você não pode desativar o próprio usuário." });
+        }
+
+        if (input.email) {
+          // If email belongs to another user, block.
+          const other = await db
+            .select({ id: users.id })
+            .from(users)
+            .where(eq(users.email, input.email))
+            .limit(1);
+          if (other.length && other[0].id !== input.id) {
+            throw new TRPCError({ code: "CONFLICT", message: "Esse e-mail já está em uso." });
+          }
+        }
+
+        const { id, password, isActive, ...rest } = input;
+        const updateData: any = { ...rest };
+        if (typeof isActive === "boolean") updateData.isActive = isActive ? 1 : 0;
+        if (password) updateData.passwordHash = await bcrypt.hash(password, 10);
+
+        await db.update(users).set(updateData).where(eq(users.id, id));
+        return { success: true } as const;
+      }),
+
+    remove: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+        if (ctx.user?.id === input.id) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Você não pode remover o próprio usuário." });
+        }
+
+        // Soft delete: disable user
+        await db.update(users).set({ isActive: 0 }).where(eq(users.id, input.id));
+        return { success: true } as const;
+      }),
+  }),
+
   // News procedures
   news: router({
     list: publicProcedure.query(async () => {
-  const db = await getDb();
-  if (!db) return [];
-  const result = await db
-    .select()
-    .from(news)
-    .orderBy(desc(news.createdAt))
-    .limit(10);
-  return result;
-}),
+      const db = await getDb();
+      if (!db) return [];
+      const result = await db
+        .select()
+        .from(news)
+        .where(eq(news.published, new Date()))
+        .orderBy(desc(news.published))
+        .limit(10);
+      return result;
+    }),
 
     getLatest: publicProcedure.query(async () => {
       const db = await getDb();
