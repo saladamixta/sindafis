@@ -15,13 +15,13 @@
       "when": 1772721747245,
       "tag": "0001_far_redwing",
       "breakpoints": true
-    }
+    },
     {
-  "idx": 2,
-  "version": "5",
-  "when": 1772886242143,
-  "tag": "0002_breezy_stellaris",
-  "breakpoints": true
-}
+      "idx": 2,
+      "version": "5",
+      "when": 1772886242143,
+      "tag": "0002_breezy_stellaris",
+      "breakpoints": true
+    }
   ]
 }
