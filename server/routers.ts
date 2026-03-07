@@ -145,101 +145,145 @@ export const appRouter = router({
 
   // News procedures
   news: router({
-    list: publicProcedure.query(async () => {
-  const db = await getDb();
-  if (!db) return [];
+  list: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
 
-  const result = await db
-    .select()
-    .from(news)
-    .orderBy(desc(news.published), desc(news.createdAt))
-    .limit(10);
+    const result = await db
+      .select()
+      .from(news)
+      .orderBy(desc(news.published), desc(news.createdAt))
+      .limit(10);
 
-  return result;
-}),
-
-    getLatest: publicProcedure.query(async () => {
-      const db = await getDb();
-      if (!db) return null;
-      const result = await db
-        .select()
-        .from(news)
-        .orderBy(desc(news.published))
-        .limit(1);
-      return result[0] || null;
-    }),
-
-    getBySlug: publicProcedure.input(z.string()).query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) return null;
-      const result = await db
-        .select()
-        .from(news)
-        .where(eq(news.slug, input));
-      return result[0] || null;
-    }),
-
-    create: protectedProcedure
-      .input(
-        z.object({
-          title: z.string().min(1),
-          slug: z.string().min(1),
-          content: z.string().min(1),
-          excerpt: z.string().optional(),
-          coverImage: z.string().optional(),
-        })
-      )
-      .mutation(async ({ ctx, input }) => {
-        if (ctx.user?.role !== "admin") {
-          throw new TRPCError({ code: "FORBIDDEN" });
-        }
-        const db = await getDb();
-        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-
-        const result = await db.insert(news).values({
-          ...input,
-          published: new Date(),
-          createdBy: ctx.user.id,
-        });
-        return result;
-      }),
-
-    update: protectedProcedure
-      .input(
-        z.object({
-          id: z.number(),
-          title: z.string().optional(),
-          slug: z.string().optional(),
-          content: z.string().optional(),
-          excerpt: z.string().optional(),
-          coverImage: z.string().optional(),
-        })
-      )
-      .mutation(async ({ ctx, input }) => {
-        if (ctx.user?.role !== "admin") {
-          throw new TRPCError({ code: "FORBIDDEN" });
-        }
-        const db = await getDb();
-        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-
-        const { id, ...data } = input;
-        const result = await db.update(news).set(data).where(eq(news.id, id));
-        return result;
-      }),
-
-    delete: protectedProcedure
-      .input(z.number())
-      .mutation(async ({ ctx, input }) => {
-        if (ctx.user?.role !== "admin") {
-          throw new TRPCError({ code: "FORBIDDEN" });
-        }
-        const db = await getDb();
-        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-
-        const result = await db.delete(news).where(eq(news.id, input));
-        return result;
-      }),
+    return result;
   }),
+
+  listFeed: publicProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(24).default(6),
+        offset: z.number().min(0).default(0),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) {
+        return {
+          items: [],
+          nextOffset: null,
+          hasMore: false,
+        };
+      }
+
+      const rows = await db
+        .select()
+        .from(news)
+        .orderBy(desc(news.published), desc(news.createdAt))
+        .limit(input.limit + 1)
+        .offset(input.offset);
+
+      const hasMore = rows.length > input.limit;
+      const items = hasMore ? rows.slice(0, input.limit) : rows;
+
+      return {
+        items,
+        nextOffset: hasMore ? input.offset + input.limit : null,
+        hasMore,
+      };
+    }),
+
+  getLatest: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return null;
+
+    const result = await db
+      .select()
+      .from(news)
+      .orderBy(desc(news.published), desc(news.createdAt))
+      .limit(1);
+
+    return result[0] || null;
+  }),
+
+  getBySlug: publicProcedure.input(z.string()).query(async ({ input }) => {
+    const db = await getDb();
+    if (!db) return null;
+
+    const result = await db
+      .select()
+      .from(news)
+      .where(eq(news.slug, input));
+
+    return result[0] || null;
+  }),
+
+  create: protectedProcedure
+    .input(
+      z.object({
+        title: z.string().min(1),
+        slug: z.string().min(1),
+        content: z.string().min(1),
+        excerpt: z.string().optional(),
+        coverImage: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user?.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const result = await db.insert(news).values({
+        ...input,
+        published: new Date(),
+        createdBy: ctx.user.id,
+      });
+
+      return result;
+    }),
+
+  update: protectedProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        title: z.string().optional(),
+        slug: z.string().optional(),
+        content: z.string().optional(),
+        excerpt: z.string().optional(),
+        coverImage: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user?.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const { id, ...data } = input;
+      const result = await db.update(news).set(data).where(eq(news.id, id));
+
+      return result;
+    }),
+
+  delete: protectedProcedure
+    .input(z.number())
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user?.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const result = await db.delete(news).where(eq(news.id, input));
+
+      return result;
+    }),
+}),
 
   // Partnerships procedures
   partnerships: router({
