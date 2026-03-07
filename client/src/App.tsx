@@ -7,12 +7,14 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Admin from "./pages/Admin";
 import NoticiaDetalhe from "./pages/NoticiaDetalhe";
+import Noticias from "./pages/Noticias";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/admin" component={Admin} />
+      <Route path="/noticias" component={Noticias} />
       <Route path="/noticias/:slug" component={NoticiaDetalhe} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
