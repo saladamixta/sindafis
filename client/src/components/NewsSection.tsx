@@ -38,7 +38,7 @@ export default function NewsSection() {
   if (!newsList || newsList.length === 0) return null;
 
   const mainNews = newsList[0];
-  const sideNews = newsList.slice(1, 4); // 3 itens
+  const sideNews = newsList.slice(1, 4);
 
   return (
     <section className="py-16 md:py-24 bg-white">
@@ -48,19 +48,16 @@ export default function NewsSection() {
             Últimas Notícias
           </h2>
 
-          {/* Se você criar uma página /noticias, pode trocar o onClick pra isso */}
           <Button
             variant="ghost"
             className="text-primary hover:text-primary-dark hover:bg-primary-light"
-            onClick={() => setLocation("/#news")}
+            onClick={() => setLocation("/noticias")}
           >
             Ver todas <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
 
-        {/* Layout do mockup: matéria grande + lista lateral */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-          {/* PRINCIPAL (span 2) */}
           <Card
             className="md:col-span-2 overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
             onClick={() => goTo(mainNews.slug)}
@@ -95,9 +92,11 @@ export default function NewsSection() {
                     {mainNews.title}
                   </h3>
 
-                  <p className="text-text-secondary text-lg leading-relaxed mb-6">
-                    {mainNews.excerpt}
-                  </p>
+                  {mainNews.excerpt ? (
+                    <p className="text-text-secondary text-lg leading-relaxed mb-6">
+                      {mainNews.excerpt}
+                    </p>
+                  ) : null}
                 </div>
 
                 <Button
@@ -113,7 +112,6 @@ export default function NewsSection() {
             </div>
           </Card>
 
-          {/* LATERAL: 3 cards com imagem à esquerda */}
           <div className="md:col-span-1 flex flex-col gap-4">
             {sideNews.map((news) => (
               <Card
