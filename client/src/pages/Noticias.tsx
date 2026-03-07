@@ -74,7 +74,7 @@ export default function Noticias() {
     ensureMeta(
       "name",
       "description",
-      "Acompanhe as últimas notícias do SINDAFIS em ordem cronológica, com comunicados e informações institucionais."
+      "Acompanhe as últimas notícias do SINDAFIS"
     );
 
     ensureMeta("property", "og:locale", "pt_BR");
@@ -83,7 +83,7 @@ export default function Noticias() {
     ensureMeta(
       "property",
       "og:description",
-      "Acompanhe as últimas notícias do SINDAFIS em ordem cronológica, com comunicados e informações institucionais."
+      "Acompanhe as últimas notícias do SINDAFIS"
     );
     ensureMeta("property", "og:url", canonicalUrl);
     ensureMeta("property", "og:site_name", "SINDAFIS");
@@ -95,7 +95,7 @@ export default function Noticias() {
     ensureMeta(
       "name",
       "twitter:description",
-      "Acompanhe as últimas notícias do SINDAFIS em ordem cronológica, com comunicados e informações institucionais."
+      "Acompanhe as últimas notícias do SINDAFIS"
     );
     ensureMeta("name", "twitter:image", ogImage);
   }, []);
