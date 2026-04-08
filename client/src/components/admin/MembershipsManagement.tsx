@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, X } from "lucide-react";
+import { Check, X, Upload } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import CSVImport from "./CSVImport";
 
 export default function MembershipsManagement() {
+  const [tab, setTab] = useState<"list" | "import">("list");
   const [selectedStatus, setSelectedStatus] = useState<"pending" | "approved" | "rejected" | "all">("pending");
 
   const membershipsList = trpc.memberships.list.useQuery();
@@ -61,7 +63,37 @@ export default function MembershipsManagement() {
         </p>
       </div>
 
-      {/* Filter Tabs */}
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-gray-border">
+        <button
+          onClick={() => setTab("list")}
+          className={`px-4 py-2 font-medium transition-colors border-b-2 ${
+            tab === "list"
+              ? "border-primary text-primary"
+              : "border-transparent text-text-secondary hover:text-text-primary"
+          }`}
+        >
+          Lista de Filiações
+        </button>
+        <button
+          onClick={() => setTab("import")}
+          className={`px-4 py-2 font-medium transition-colors border-b-2 flex items-center gap-2 ${
+            tab === "import"
+              ? "border-primary text-primary"
+              : "border-transparent text-text-secondary hover:text-text-primary"
+          }`}
+        >
+          <Upload className="w-4 h-4" />
+          Importar CSV
+        </button>
+      </div>
+
+      {/* Tab Content */}
+      {tab === "import" && <CSVImport />}
+
+      {tab === "list" && (
+        <>
+          {/* Filter Tabs */}
       <div className="flex gap-2 flex-wrap">
         {[
           { id: "all" as const, label: "Todas" },
@@ -174,6 +206,8 @@ export default function MembershipsManagement() {
           </p>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 }

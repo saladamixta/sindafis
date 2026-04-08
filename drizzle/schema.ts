@@ -82,10 +82,31 @@ export const memberships = mysqlTable("memberships", {
   email: varchar("email", { length: 320 }).notNull(),
   phone: varchar("phone", { length: 20 }),
   cpf: varchar("cpf", { length: 20 }),
-  status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending"),
+  professionalRegistration: varchar("professionalRegistration", { length: 100 }),
+  status: mysqlEnum("status", ["pending", "approved", "rejected", "active", "inactive"]).default("pending"),
+  // Campos de carteirinha digital
+  membershipCode: varchar("membershipCode", { length: 50 }).unique(), // Código único (ex: SINDAFIS-2026-00001)
+  qrCodeUrl: text("qrCodeUrl"), // URL da imagem do QR Code
+  approvedAt: timestamp("approvedAt"), // Data de aprovação
+  expiresAt: timestamp("expiresAt"), // Data de expiração (opcional)
+  photoUrl: text("photoUrl"), // Foto do filiado (opcional)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
 export type Membership = typeof memberships.$inferSelect;
 export type InsertMembership = typeof memberships.$inferInsert;
+
+// Validações de Carteirinha (histórico de validações)
+export const membershipValidations = mysqlTable("membershipValidations", {
+  id: int("id").autoincrement().primaryKey(),
+  membershipId: int("membershipId").notNull().references(() => memberships.id),
+  membershipCode: varchar("membershipCode", { length: 50 }).notNull(),
+  validatedAt: timestamp("validatedAt").defaultNow().notNull(),
+  validatedBy: varchar("validatedBy", { length: 255 }), // Nome da empresa/parceiro
+  ipAddress: varchar("ipAddress", { length: 45 }),
+  userAgent: text("userAgent"),
+});
+
+export type MembershipValidation = typeof membershipValidations.$inferSelect;
+export type InsertMembershipValidation = typeof membershipValidations.$inferInsert;

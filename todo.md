@@ -57,3 +57,19 @@
 - [x] Ajustar seção de documentos de transparência
 - [ ] Adicionar barra de busca no header
 - [x] Refinar espaçamentos e tipografia conforme mockup
+
+
+## Sistema de Carteirinha Digital
+
+- [x] Estender schema de banco de dados com campos de carteirinha
+- [x] Implementar geração de código único (SINDAFIS-YYYY-XXXXX)
+- [x] Implementar geração de QR Code
+- [x] Criar componente MembershipCard para exibição
+- [x] Implementar importação de filiados via CSV
+- [x] Criar página pública de validação de carteirinha
+- [x] Implementar procedures tRPC para carteirinha
+- [x] Criar testes vitest para procedures (16/16 passando)
+- [ ] Implementar download de carteirinha como PDF
+- [ ] Adicionar foto do filiado na carteirinha
+- [ ] Implementar renovação de carteirinha expirada
+- [ ] Adicionar histórico de validações por filiado

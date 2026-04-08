@@ -3,7 +3,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { getDb } from "./db";
-import { news, partnerships, transparencyDocuments, memberships } from "../drizzle/schema";
+import { news, partnerships, transparencyDocuments, memberships, membershipValidations } from "../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -52,7 +52,8 @@ export const appRouter = router({
       const result = await db
         .select()
         .from(news)
-        .where(eq(news.slug, input));
+        .where(eq(news.slug, input))
+        .limit(1);
       return result[0] || null;
     }),
 
@@ -75,8 +76,8 @@ export const appRouter = router({
 
         const result = await db.insert(news).values({
           ...input,
-          published: new Date(),
           createdBy: ctx.user.id,
+          published: new Date(),
         });
         return result;
       }),
@@ -86,7 +87,6 @@ export const appRouter = router({
         z.object({
           id: z.number(),
           title: z.string().optional(),
-          slug: z.string().optional(),
           content: z.string().optional(),
           excerpt: z.string().optional(),
           coverImage: z.string().optional(),
@@ -296,6 +296,7 @@ export const appRouter = router({
           email: z.string().email(),
           phone: z.string().optional(),
           cpf: z.string().optional(),
+          professionalRegistration: z.string().optional(),
         })
       )
       .mutation(async ({ input }) => {
@@ -323,7 +324,7 @@ export const appRouter = router({
       .input(
         z.object({
           id: z.number(),
-          status: z.enum(["pending", "approved", "rejected"]),
+          status: z.enum(["pending", "approved", "rejected", "active", "inactive"]),
         })
       )
       .mutation(async ({ ctx, input }) => {
@@ -333,11 +334,200 @@ export const appRouter = router({
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
+        const updateData: any = { status: input.status };
+        if (input.status === "active") {
+          updateData.approvedAt = new Date();
+        }
+
         const result = await db
           .update(memberships)
-          .set({ status: input.status })
+          .set(updateData)
           .where(eq(memberships.id, input.id));
         return result;
+      }),
+
+    // Gerar código único e QR Code para carteirinha
+    generateMembershipCard: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user?.role !== "admin") {
+          throw new TRPCError({ code: "FORBIDDEN" });
+        }
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+        // Buscar filiado
+        const member = await db
+          .select()
+          .from(memberships)
+          .where(eq(memberships.id, input.id))
+          .limit(1);
+
+        if (!member || member.length === 0) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Filiado não encontrado" });
+        }
+
+        // Gerar código único (ex: SINDAFIS-2026-00001)
+        const year = new Date().getFullYear();
+        const randomId = String(input.id).padStart(5, "0");
+        const membershipCode = `SINDAFIS-${year}-${randomId}`;
+
+        // Gerar URL do QR Code usando API pública
+        const qrCodeData = encodeURIComponent(
+          `${process.env.VITE_FRONTEND_FORGE_API_URL || "https://sindafis.manus.space"}/validate/${membershipCode}`
+        );
+        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${qrCodeData}`;
+
+        // Atualizar filiado com código e QR Code
+        const result = await db
+          .update(memberships)
+          .set({
+            membershipCode,
+            qrCodeUrl,
+            status: "active",
+            approvedAt: new Date(),
+          })
+          .where(eq(memberships.id, input.id));
+
+        return { membershipCode, qrCodeUrl };
+      }),
+
+    // Obter carteirinha por código
+    getByCode: publicProcedure
+      .input(z.object({ code: z.string() }))
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) return null;
+
+        const result = await db
+          .select()
+          .from(memberships)
+          .where(eq(memberships.membershipCode, input.code))
+          .limit(1);
+
+        if (!result || result.length === 0) return null;
+
+        const member = result[0];
+
+        // Registrar validação
+        if (member.id) {
+          await db.insert(membershipValidations).values({
+            membershipId: member.id,
+            membershipCode: input.code,
+            validatedAt: new Date(),
+          });
+        }
+
+        // Retornar apenas informações públicas
+        return {
+          id: member.id,
+          name: member.name,
+          membershipCode: member.membershipCode,
+          status: member.status,
+          approvedAt: member.approvedAt,
+          expiresAt: member.expiresAt,
+          photoUrl: member.photoUrl,
+        };
+      }),
+
+    // Validar carteirinha (para empresas conveniadas)
+    validate: publicProcedure
+      .input(
+        z.object({
+          code: z.string(),
+          validatedBy: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+        const result = await db
+          .select()
+          .from(memberships)
+          .where(eq(memberships.membershipCode, input.code))
+          .limit(1);
+
+        if (!result || result.length === 0) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Carteirinha não encontrada" });
+        }
+
+        const member = result[0];
+
+        // Verificar se está ativa
+        if (member.status !== "active") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Carteirinha inativa" });
+        }
+
+        // Verificar expiração
+        if (member.expiresAt && new Date() > member.expiresAt) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Carteirinha expirada" });
+        }
+
+        // Registrar validação
+        await db.insert(membershipValidations).values({
+          membershipId: member.id,
+          membershipCode: input.code,
+          validatedBy: input.validatedBy,
+          ipAddress: (ctx.req.headers["x-forwarded-for"] as string) || "",
+          userAgent: (ctx.req.headers["user-agent"] as string) || "",
+        });
+
+        return {
+          valid: true,
+          name: member.name,
+          membershipCode: member.membershipCode,
+          approvedAt: member.approvedAt,
+          expiresAt: member.expiresAt,
+        };
+      }),
+
+    // Importar filiados via CSV
+    importCSV: protectedProcedure
+      .input(
+        z.object({
+          csvData: z.array(
+            z.object({
+              name: z.string(),
+              email: z.string().email(),
+              phone: z.string().optional(),
+              cpf: z.string().optional(),
+              professionalRegistration: z.string().optional(),
+            })
+          ),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user?.role !== "admin") {
+          throw new TRPCError({ code: "FORBIDDEN" });
+        }
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+        const results = [];
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (const row of input.csvData) {
+          try {
+            const result = await db.insert(memberships).values({
+              ...row,
+              status: "pending",
+            });
+            results.push({ ...row, success: true });
+            successCount++;
+          } catch (error) {
+            results.push({ ...row, success: false, error: String(error) });
+            errorCount++;
+          }
+        }
+
+        return {
+          totalImported: input.csvData.length,
+          successCount,
+          errorCount,
+          results,
+        };
       }),
   }),
 });
