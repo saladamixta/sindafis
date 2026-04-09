@@ -1,7 +1,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
 import { getDb } from "./db";
 import { news, partnerships, transparencyDocuments, memberships, membershipValidations } from "../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
@@ -29,11 +29,44 @@ export const appRouter = router({
       const result = await db
         .select()
         .from(news)
-        .where(eq(news.published, new Date()))
-        .orderBy(desc(news.published))
+        .orderBy(desc(news.published), desc(news.createdAt))
         .limit(10);
       return result;
     }),
+
+    listFeed: publicProcedure
+      .input(
+        z.object({
+          limit: z.number().min(1).max(24).default(6),
+          offset: z.number().min(0).default(0),
+        })
+      )
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) {
+          return {
+            items: [],
+            nextOffset: null,
+            hasMore: false,
+          };
+        }
+
+        const rows = await db
+          .select()
+          .from(news)
+          .orderBy(desc(news.published), desc(news.createdAt))
+          .limit(input.limit + 1)
+          .offset(input.offset);
+
+        const hasMore = rows.length > input.limit;
+        const items = hasMore ? rows.slice(0, input.limit) : rows;
+
+        return {
+          items,
+          nextOffset: hasMore ? input.offset + input.limit : null,
+          hasMore,
+        };
+      }),
 
     getLatest: publicProcedure.query(async () => {
       const db = await getDb();
@@ -41,7 +74,7 @@ export const appRouter = router({
       const result = await db
         .select()
         .from(news)
-        .orderBy(desc(news.published))
+        .orderBy(desc(news.published), desc(news.createdAt))
         .limit(1);
       return result[0] || null;
     }),
@@ -52,8 +85,7 @@ export const appRouter = router({
       const result = await db
         .select()
         .from(news)
-        .where(eq(news.slug, input))
-        .limit(1);
+        .where(eq(news.slug, input));
       return result[0] || null;
     }),
 
@@ -87,6 +119,7 @@ export const appRouter = router({
         z.object({
           id: z.number(),
           title: z.string().optional(),
+          slug: z.string().optional(),
           content: z.string().optional(),
           excerpt: z.string().optional(),
           coverImage: z.string().optional(),

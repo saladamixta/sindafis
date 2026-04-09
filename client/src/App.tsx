@@ -7,6 +7,8 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Admin from "./pages/Admin";
 import ValidateMembership from "./pages/ValidateMembership";
+import Noticias from "./pages/Noticias";
+import NoticiaDetalhe from "./pages/NoticiaDetalhe";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -14,6 +16,8 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/admin"} component={Admin} />
+      <Route path={"/noticias"} component={Noticias} />
+      <Route path={"/noticias/:slug"} component={NoticiaDetalhe} />
       <Route path={"/validate"} component={ValidateMembership} />
       <Route path={"/validate/:code"} component={ValidateMembership} />
       <Route path={"/404"} component={NotFound} />
