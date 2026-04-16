@@ -1,124 +1,92 @@
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 
-// Mock data - will be replaced with real data from API
-const mockNews = [
-  {
-    id: 1,
-    title: "SINDAFIS promove assembleia geral para discutir pautas 2026",
-    excerpt: "Reunião acontecerá no próximo mês com discussão de temas importantes para a categoria",
-    coverImage: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=400&fit=crop",
-    date: "2026-03-05",
-  },
-  {
-    id: 2,
-    title: "Novo convênio com instituição financeira beneficia filiados",
-    excerpt: "Acordo oferece taxas especiais e condições diferenciadas para membros do sindicato",
-    coverImage: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&h=400&fit=crop",
-    date: "2026-03-01",
-  },
-  {
-    id: 3,
-    title: "Transparência: Relatório financeiro de 2025 disponível",
-    excerpt: "Confira o balanço completo das atividades e finanças do sindicato no ano passado",
-    coverImage: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=400&fit=crop",
-    date: "2026-02-28",
-  },
-];
+type News = {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt: string;
+  coverImage?: string;
+  createdAt: string;
+};
 
 export default function NewsSection() {
-  const mainNews = mockNews[0];
-  const secondaryNews = mockNews.slice(1, 3);
+  const { data: news = [], isLoading } = useQuery<News[]>({
+    queryKey: ["news-feed"],
+    queryFn: async () => {
+      const res = await fetch("/api/news");
+      return res.json();
+    },
+  });
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("pt-BR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
+  if (isLoading) {
+    return <div className="p-6">Carregando notícias...</div>;
+  }
+
+  if (!news.length) {
+    return <div className="p-6">Nenhuma notícia encontrada.</div>;
+  }
+
+  const [main, ...others] = news;
 
   return (
-    <section className="py-16 md:py-24 bg-white">
-      <div className="container">
-        <div className="flex items-center justify-between mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-text-primary">
-            Últimas Notícias
-          </h2>
-          <Button
-            variant="ghost"
-            className="text-primary hover:text-primary-dark hover:bg-primary-light"
-          >
-            Ver todas <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-        </div>
+    <section className="max-w-7xl mx-auto px-4 py-10">
+      <h2 className="text-2xl font-bold mb-6">Últimas Notícias</h2>
 
-        {/* Main News */}
-        <div className="mb-12">
-          <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-              <div className="relative h-64 md:h-full min-h-80">
+      <div className="grid md:grid-cols-3 gap-6">
+        {/* Destaque */}
+        {main && (
+          <Link href={`/noticias/${main.slug}`}>
+            <a className="md:col-span-2 block bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
+              {main.coverImage && (
                 <img
-                  src={mainNews.coverImage}
-                  alt={mainNews.title}
-                  className="w-full h-full object-cover"
+                  src={main.coverImage}
+                  className="w-full h-64 object-cover"
                 />
+              )}
+              <div className="p-5">
+                <h3 className="text-xl font-semibold mb-2">
+                  {main.title}
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  {main.excerpt}
+                </p>
               </div>
-              <div className="p-8 flex flex-col justify-between">
+            </a>
+          </Link>
+        )}
+
+        {/* Laterais */}
+        <div className="flex flex-col gap-4">
+          {others.slice(0, 3).map((item) => (
+            <Link key={item.id} href={`/noticias/${item.slug}`}>
+              <a className="flex gap-3 bg-white p-3 rounded-lg shadow hover:shadow-md transition">
+                {item.coverImage && (
+                  <img
+                    src={item.coverImage}
+                    className="w-24 h-20 object-cover rounded"
+                  />
+                )}
                 <div>
-                  <p className="text-sm text-primary font-semibold mb-3">
-                    {formatDate(mainNews.date)}
-                  </p>
-                  <h3 className="text-2xl md:text-3xl font-bold text-text-primary mb-4">
-                    {mainNews.title}
-                  </h3>
-                  <p className="text-text-secondary text-lg leading-relaxed mb-6">
-                    {mainNews.excerpt}
+                  <h4 className="font-semibold text-sm">
+                    {item.title}
+                  </h4>
+                  <p className="text-xs text-gray-500 line-clamp-2">
+                    {item.excerpt}
                   </p>
                 </div>
-                <Button className="w-fit bg-primary hover:bg-primary-dark text-white font-semibold">
-                  Ler matéria completa
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Secondary News */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {secondaryNews.map((news) => (
-            <Card
-              key={news.id}
-              className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer"
-            >
-              <div className="relative h-48 overflow-hidden">
-                <img
-                  src={news.coverImage}
-                  alt={news.title}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform"
-                />
-              </div>
-              <div className="p-6">
-                <p className="text-xs text-primary font-semibold mb-2">
-                  {formatDate(news.date)}
-                </p>
-                <h4 className="text-lg font-bold text-text-primary mb-3">
-                  {news.title}
-                </h4>
-                <p className="text-sm text-text-secondary mb-4">
-                  {news.excerpt}
-                </p>
-                <Button
-                  variant="ghost"
-                  className="text-primary hover:text-primary-dark p-0"
-                >
-                  Ler mais <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-            </Card>
+              </a>
+            </Link>
           ))}
         </div>
+      </div>
+
+      <div className="mt-6 text-right">
+        <Link href="/noticias">
+          <a className="text-blue-600 hover:underline">
+            Ver todas as notícias →
+          </a>
+        </Link>
       </div>
     </section>
   );
