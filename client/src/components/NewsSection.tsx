@@ -1,23 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
+import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 
-type News = {
-  id: number;
-  title: string;
-  slug: string;
-  excerpt: string;
-  coverImage?: string;
-  createdAt: string;
-};
-
 export default function NewsSection() {
-  const { data: news = [], isLoading } = useQuery<News[]>({
-    queryKey: ["news-feed"],
-    queryFn: async () => {
-      const res = await fetch("/api/news");
-      return res.json();
-    },
+  const { data, isLoading } = trpc.news.listFeed.useQuery({
+    limit: 6,
+    offset: 0,
   });
+
+  const news = data?.items ?? [];
 
   if (isLoading) {
     return <div className="p-6">Carregando notícias...</div>;
