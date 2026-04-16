@@ -16,57 +16,59 @@ export default function NewsSection() {
 
   return (
     <section className="max-w-7xl mx-auto px-4 py-10">
-      <h2 className="text-2xl font-bold mb-6">Últimas Notícias</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Últimas Notícias</h2>
+        <Link href="/noticias">
+          <a className="text-sm text-green-700 hover:underline">
+            Ver todas →
+          </a>
+        </Link>
+      </div>
 
       <div className="grid md:grid-cols-3 gap-6">
 
-        {/* 🔥 CARD PRINCIPAL */}
+        {/* PRINCIPAL */}
         {main && (
           <Link href={`/noticias/${main.slug}`}>
-            <a className="md:col-span-2 bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
+            <a className="md:col-span-2 group relative rounded-xl overflow-hidden shadow-lg">
 
-              {/* IMAGEM */}
-              <div className="relative h-[320px]">
-                <img
-                  src={main.coverImage}
-                  className="w-full h-full object-cover"
-                />
+              <img
+                src={main.coverImage}
+                className="w-full h-[360px] object-cover group-hover:scale-105 transition"
+              />
 
-                {/* OVERLAY GRADIENTE */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-                {/* TÍTULO SOBRE IMAGEM */}
-                <div className="absolute bottom-0 p-5 text-white">
-                  <h3 className="text-xl md:text-2xl font-bold leading-tight line-clamp-3">
-                    {main.title}
-                  </h3>
-                </div>
-              </div>
+              <div className="absolute bottom-0 p-6 text-white">
+                <span className="text-xs uppercase opacity-80">
+                  Destaque
+                </span>
 
-              {/* TEXTO ABAIXO */}
-              <div className="p-5">
-                <p className="text-gray-600 text-sm line-clamp-3">
+                <h3 className="text-2xl font-bold leading-tight line-clamp-3">
+                  {main.title}
+                </h3>
+
+                <p className="text-sm opacity-90 line-clamp-2 mt-2">
                   {main.excerpt}
                 </p>
               </div>
-
             </a>
           </Link>
         )}
 
-        {/* 🔹 LATERAIS */}
+        {/* LATERAIS */}
         <div className="flex flex-col gap-4">
-          {others.slice(0, 3).map((item) => (
+          {others.slice(0, 4).map((item) => (
             <Link key={item.id} href={`/noticias/${item.slug}`}>
-              <a className="flex gap-3 bg-white p-3 rounded-lg shadow hover:shadow-md transition">
+              <a className="flex gap-3 bg-white p-3 rounded-lg shadow hover:shadow-md transition group">
 
                 <img
                   src={item.coverImage}
-                  className="w-24 h-20 object-cover rounded"
+                  className="w-24 h-20 object-cover rounded group-hover:scale-105 transition"
                 />
 
-                <div className="flex flex-col justify-center">
-                  <h4 className="font-semibold text-sm line-clamp-2">
+                <div>
+                  <h4 className="font-semibold text-sm line-clamp-2 group-hover:text-green-700">
                     {item.title}
                   </h4>
 
@@ -74,20 +76,10 @@ export default function NewsSection() {
                     {item.excerpt}
                   </p>
                 </div>
-
               </a>
             </Link>
           ))}
         </div>
-
-      </div>
-
-      <div className="mt-6 text-right">
-        <Link href="/noticias">
-          <a className="text-blue-600 hover:underline">
-            Ver todas as notícias →
-          </a>
-        </Link>
       </div>
     </section>
   );
