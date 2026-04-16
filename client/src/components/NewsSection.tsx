@@ -2,53 +2,41 @@ import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 
 export default function NewsSection() {
-  const { data, isLoading } = trpc.news.listFeed.useQuery({
+  const { data } = trpc.news.listFeed.useQuery({
     limit: 6,
     offset: 0,
   });
 
   const news = data?.items ?? [];
 
-  if (isLoading) return <div className="p-6">Carregando...</div>;
-  if (!news.length) return <div className="p-6">Sem notícias</div>;
+  if (!news.length) return null;
 
   const [main, ...others] = news;
 
   return (
-    <section className="max-w-7xl mx-auto px-4 py-10">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Últimas Notícias</h2>
-        <Link href="/noticias">
-          <a className="text-sm text-green-700 hover:underline">
-            Ver todas →
-          </a>
-        </Link>
-      </div>
+    <section className="max-w-7xl mx-auto px-4 py-12">
+      <h2 className="text-2xl font-bold mb-6">Últimas Notícias</h2>
 
       <div className="grid md:grid-cols-3 gap-6">
 
         {/* PRINCIPAL */}
         {main && (
           <Link href={`/noticias/${main.slug}`}>
-            <a className="md:col-span-2 group relative rounded-xl overflow-hidden shadow-lg">
+            <a className="md:col-span-2 group bg-white rounded-xl overflow-hidden shadow-lg">
 
-              <img
-                src={main.coverImage}
-                className="w-full h-[360px] object-cover group-hover:scale-105 transition"
-              />
+              <div className="relative">
+                <img
+                  src={main.coverImage}
+                  className="w-full h-[340px] object-cover"
+                />
+              </div>
 
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-              <div className="absolute bottom-0 p-6 text-white">
-                <span className="text-xs uppercase opacity-80">
-                  Destaque
-                </span>
-
-                <h3 className="text-2xl font-bold leading-tight line-clamp-3">
+              <div className="p-6">
+                <h3 className="text-xl font-bold leading-snug line-clamp-2 group-hover:text-green-700">
                   {main.title}
                 </h3>
 
-                <p className="text-sm opacity-90 line-clamp-2 mt-2">
+                <p className="text-gray-600 mt-2 line-clamp-3">
                   {main.excerpt}
                 </p>
               </div>
@@ -64,7 +52,7 @@ export default function NewsSection() {
 
                 <img
                   src={item.coverImage}
-                  className="w-24 h-20 object-cover rounded group-hover:scale-105 transition"
+                  className="w-28 h-20 object-cover rounded"
                 />
 
                 <div>
