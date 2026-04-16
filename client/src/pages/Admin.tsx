@@ -15,7 +15,7 @@ export default function Admin() {
   const [activeTab, setActiveTab] = useState<AdminTab>("news");
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== "admin")) {
+    if (!loading && user && user.role !== "admin") {
       setLocation("/");
     }
   }, [user, loading, setLocation]);
@@ -31,7 +31,7 @@ export default function Admin() {
     );
   }
 
-  if (!user || user.role !== "admin") {
+  if (user && user.role !== "admin") {
     return null;
   }
 
@@ -54,32 +54,34 @@ export default function Admin() {
           </p>
         </div>
 
-        {/* Tabs */}
-        <div className="border-b border-gray-border">
-          <div className="flex gap-4 overflow-x-auto">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-3 font-medium border-b-2 transition-colors whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? "border-primary text-primary"
-                    : "border-transparent text-text-secondary hover:text-text-primary"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        {user ? (
+          <>
+            <div className="border-b border-gray-border">
+              <div className="flex gap-4 overflow-x-auto">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`px-4 py-3 font-medium border-b-2 transition-colors whitespace-nowrap ${
+                      activeTab === tab.id
+                        ? "border-primary text-primary"
+                        : "border-transparent text-text-secondary hover:text-text-primary"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        {/* Tab Content */}
-        <div>
-          {activeTab === "news" && <NewsManagement />}
-          {activeTab === "partnerships" && <PartnershipsManagement />}
-          {activeTab === "transparency" && <TransparencyManagement />}
-          {activeTab === "memberships" && <MembershipsManagement />}
-        </div>
+            <div>
+              {activeTab === "news" && <NewsManagement />}
+              {activeTab === "partnerships" && <PartnershipsManagement />}
+              {activeTab === "transparency" && <TransparencyManagement />}
+              {activeTab === "memberships" && <MembershipsManagement />}
+            </div>
+          </>
+        ) : null}
       </div>
     </DashboardLayout>
   );
