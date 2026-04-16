@@ -1,17 +1,70 @@
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
-import { getDb } from "./db";
+import { getDb, upsertUser } from "./db";
 import { news, partnerships, transparencyDocuments, memberships, membershipValidations } from "../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
 import { z } from "zod";
+import { sdk } from "./_core/sdk";
 import { TRPCError } from "@trpc/server";
 
 export const appRouter = router({
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
+    localLogin: publicProcedure
+      .input(
+        z.object({
+          email: z.string().email(),
+          password: z.string().min(1),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const adminEmail = (process.env.ADMIN_EMAIL ?? "").trim().toLowerCase();
+        const adminPassword = process.env.ADMIN_PASSWORD ?? "";
+        const adminName = (process.env.ADMIN_NAME ?? "Administrador").trim() || "Administrador";
+
+        if (!adminEmail || !adminPassword) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "Login local não configurado no servidor.",
+          });
+        }
+
+        if (input.email.trim().toLowerCase() !== adminEmail || input.password !== adminPassword) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "E-mail ou senha inválidos.",
+          });
+        }
+
+        const openId = `local-admin:${adminEmail}`;
+        await getDb();
+        await upsertUser({
+          openId,
+          name: adminName,
+          email: adminEmail,
+          loginMethod: "local",
+          role: "admin",
+          lastSignedIn: new Date(),
+        });
+
+        const sessionToken = await sdk.createSessionToken(openId, {
+          name: adminName,
+          expiresInMs: ONE_YEAR_MS,
+        });
+
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, {
+          ...cookieOptions,
+          maxAge: ONE_YEAR_MS,
+        });
+
+        return {
+          success: true,
+        } as const;
+      }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
